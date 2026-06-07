@@ -42,7 +42,40 @@ main {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
   padding: 28px 0 18px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.language-switch {
+  display: inline-grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 8px 18px rgba(29, 52, 42, 0.08);
+}
+
+.language-button {
+  min-width: 42px;
+  height: 36px;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.language-button.active {
+  background: var(--accent);
+  color: white;
 }
 
 .eyebrow {
@@ -320,6 +353,15 @@ h3 {
   .app-header,
   main {
     width: min(100% - 22px, 1060px);
+  }
+
+  .app-header {
+    align-items: flex-start;
+  }
+
+  .header-actions {
+    flex-direction: column-reverse;
+    align-items: flex-end;
   }
 
   .stats-grid {

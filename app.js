@@ -1,30 +1,23 @@
 const STORAGE_KEY = "foodEconomicsTrainerProgress.v1";
+const LANGUAGE_KEY = "foodEconomicsTrainerLanguage.v1";
 const EXAM_SIZE = 11;
 const POINTS_PER_QUESTION = 3;
 const PASS_SCORE = 18;
 
 const MODES = {
   past: {
-    title: "Past Exam Questions",
-    description: "Practice questions taken from previous written exams.",
     size: 15,
     pool: () => QUESTION_BANK.filter((q) => q.source === "past")
   },
   mixed: {
-    title: "Mixed Practice",
-    description: "Historical questions mixed with generated questions from Sassi's book.",
     size: 20,
     pool: () => QUESTION_BANK
   },
   exam: {
-    title: "Real Exam Simulation",
-    description: "11 questions, 3 points each. You pass with at least 18/33.",
     size: EXAM_SIZE,
     pool: () => QUESTION_BANK
   },
   review: {
-    title: "Mistakes Review",
-    description: "Practice the questions you have missed. If there are none, this uses the full bank.",
     size: 15,
     pool: (progress) => {
       const missed = QUESTION_BANK.filter((q) => progress.questions[q.id]?.wrong > 0);
@@ -33,7 +26,123 @@ const MODES = {
   }
 };
 
+const UI_TEXT = {
+  it: {
+    htmlLang: "it",
+    appTitle: "Allenatore Esame",
+    resetProgress: "Azzera progressi",
+    statsAria: "Progressi salvati",
+    seenLabel: "Domande viste",
+    accuracyLabel: "Precisione",
+    weakTopicLabel: "Argomento debole",
+    none: "Nessuno",
+    modeTabsAria: "Modalità di studio",
+    modes: {
+      past: {
+        tab: "Domande passate",
+        title: "Domande degli esami passati",
+        description: "Allenati con le domande già uscite negli scritti precedenti."
+      },
+      mixed: {
+        tab: "Allenamento misto",
+        title: "Allenamento misto",
+        description: "Domande storiche mischiate con domande generate dal libro di Sassi."
+      },
+      exam: {
+        tab: "Simulazione esame",
+        title: "Simulazione esame reale",
+        description: "11 domande, 3 punti ciascuna. Superi l'esame con almeno 18/33."
+      },
+      review: {
+        tab: "Errori",
+        title: "Ripasso degli errori",
+        description: "Rivedi le domande che hai sbagliato. Se non ce ne sono, usa tutto il database."
+      }
+    },
+    newSession: "Nuova sessione",
+    examScoreAria: "Punteggio esame",
+    score: "Punteggio",
+    correct: "Corrette",
+    status: "Stato",
+    inProgress: "In corso",
+    passing: "Sufficiente",
+    questionCounter: (current, total) => `Domanda ${current} di ${total}`,
+    showExplanation: "Mostra spiegazione",
+    next: "Avanti",
+    finish: "Termina",
+    correctFeedback: "Corretto.",
+    wrongFeedback: "Sbagliato. Tocca il pulsante info per la spiegazione.",
+    chooseAnswer: "Scegli una risposta prima di continuare.",
+    resetConfirm: "Azzerare tutti i progressi salvati?",
+    examPassed: "Esame superato",
+    examFailed: "Esame non superato",
+    examPassedText: "Hai raggiunto il punteggio minimo richiesto per superare l'esame.",
+    examFailedText: "Ti servono almeno 18 punti. Ripassa gli errori e prova un'altra simulazione.",
+    correctShort: "corrette",
+    sessionComplete: "Sessione completata",
+    progressSaved: "Progressi salvati in questo browser.",
+    tryAgain: "Riprova"
+  },
+  en: {
+    htmlLang: "en",
+    appTitle: "Exam Trainer",
+    resetProgress: "Reset saved progress",
+    statsAria: "Saved progress",
+    seenLabel: "Questions seen",
+    accuracyLabel: "Accuracy",
+    weakTopicLabel: "Weak topic",
+    none: "None",
+    modeTabsAria: "Study modes",
+    modes: {
+      past: {
+        tab: "Past Questions",
+        title: "Past Exam Questions",
+        description: "Practice questions taken from previous written exams."
+      },
+      mixed: {
+        tab: "Mixed Practice",
+        title: "Mixed Practice",
+        description: "Historical questions mixed with generated questions from Sassi's book."
+      },
+      exam: {
+        tab: "Real Exam",
+        title: "Real Exam Simulation",
+        description: "11 questions, 3 points each. You pass with at least 18/33."
+      },
+      review: {
+        tab: "Mistakes",
+        title: "Mistakes Review",
+        description: "Practice the questions you have missed. If there are none, this uses the full bank."
+      }
+    },
+    newSession: "New session",
+    examScoreAria: "Exam score",
+    score: "Score",
+    correct: "Correct",
+    status: "Status",
+    inProgress: "In progress",
+    passing: "Passing",
+    questionCounter: (current, total) => `Question ${current} of ${total}`,
+    showExplanation: "Show explanation",
+    next: "Next",
+    finish: "Finish",
+    correctFeedback: "Correct.",
+    wrongFeedback: "Wrong. Tap the info button for the explanation.",
+    chooseAnswer: "Choose an answer before continuing.",
+    resetConfirm: "Reset all saved progress?",
+    examPassed: "Exam passed",
+    examFailed: "Exam not passed",
+    examPassedText: "You reached the minimum score required to pass.",
+    examFailedText: "You need at least 18 points. Review your mistakes and try another simulation.",
+    correctShort: "correct",
+    sessionComplete: "Session complete",
+    progressSaved: "Progress saved in this browser.",
+    tryAgain: "Try again"
+  }
+};
+
 let progress = loadProgress();
+let language = loadLanguage();
 let mode = "past";
 let session = [];
 let currentIndex = 0;
@@ -42,6 +151,12 @@ let sessionCorrect = 0;
 let answeredIds = new Set();
 
 const els = {
+  appTitle: document.getElementById("appTitle"),
+  statsGrid: document.getElementById("statsGrid"),
+  seenLabel: document.getElementById("seenLabel"),
+  accuracyLabel: document.getElementById("accuracyLabel"),
+  weakTopicLabel: document.getElementById("weakTopicLabel"),
+  modeTabs: document.getElementById("modeTabs"),
   seenCount: document.getElementById("seenCount"),
   accuracyRate: document.getElementById("accuracyRate"),
   weakTopic: document.getElementById("weakTopic"),
@@ -63,11 +178,22 @@ const els = {
   resultScore: document.getElementById("resultScore"),
   restartAfterResults: document.getElementById("restartAfterResults"),
   examStrip: document.getElementById("examStrip"),
+  scoreLabel: document.getElementById("scoreLabel"),
+  correctLabel: document.getElementById("correctLabel"),
+  statusLabel: document.getElementById("statusLabel"),
   liveScore: document.getElementById("liveScore"),
   liveCorrect: document.getElementById("liveCorrect"),
   liveStatus: document.getElementById("liveStatus"),
   resetProgress: document.getElementById("resetProgress")
 };
+
+document.querySelectorAll(".language-button").forEach((button) => {
+  button.addEventListener("click", () => {
+    language = button.dataset.language;
+    saveLanguage();
+    applyLanguage();
+  });
+});
 
 document.querySelectorAll(".tab").forEach((tab) => {
   tab.addEventListener("click", () => {
@@ -82,7 +208,7 @@ els.restartAfterResults.addEventListener("click", startSession);
 els.nextQuestion.addEventListener("click", goNext);
 els.infoButton.addEventListener("click", () => els.explanation.classList.toggle("hidden"));
 els.resetProgress.addEventListener("click", () => {
-  const ok = window.confirm("Reset all saved progress?");
+  const ok = window.confirm(t().resetConfirm);
   if (!ok) return;
   progress = { totalAnswered: 0, totalCorrect: 0, questions: {}, topics: {} };
   saveProgress();
@@ -98,8 +224,8 @@ function startSession() {
   selected = null;
   sessionCorrect = 0;
   answeredIds = new Set();
-  els.modeTitle.textContent = config.title;
-  els.modeDescription.textContent = config.description;
+  els.modeTitle.textContent = t().modes[mode].title;
+  els.modeDescription.textContent = t().modes[mode].description;
   els.quizPanel.classList.remove("hidden");
   els.resultsPanel.classList.add("hidden");
   els.examStrip.classList.toggle("hidden", mode !== "exam");
@@ -115,8 +241,8 @@ function renderQuestion() {
   els.feedback.textContent = "";
   els.explanation.classList.add("hidden");
   els.explanation.textContent = q.explanation;
-  els.nextQuestion.textContent = currentIndex === session.length - 1 ? "Finish" : "Next";
-  els.questionCounter.textContent = `Question ${currentIndex + 1} of ${session.length}`;
+  els.nextQuestion.textContent = currentIndex === session.length - 1 ? t().finish : t().next;
+  els.questionCounter.textContent = t().questionCounter(currentIndex + 1, session.length);
   els.questionTopic.textContent = q.topic;
   els.questionText.textContent = q.question;
   els.answers.innerHTML = "";
@@ -144,7 +270,7 @@ function answerQuestion(index) {
   });
 
   els.feedback.className = `feedback ${isCorrect ? "good" : "bad"}`;
-  els.feedback.textContent = isCorrect ? "Correct." : "Wrong. Tap the info button for the explanation.";
+  els.feedback.textContent = isCorrect ? t().correctFeedback : t().wrongFeedback;
 
   if (!answeredIds.has(q.id)) {
     answeredIds.add(q.id);
@@ -159,7 +285,7 @@ function answerQuestion(index) {
 function goNext() {
   if (selected === null) {
     els.feedback.className = "feedback bad";
-    els.feedback.textContent = "Choose an answer before continuing.";
+    els.feedback.textContent = t().chooseAnswer;
     return;
   }
 
@@ -179,17 +305,15 @@ function finishSession() {
   if (mode === "exam") {
     const score = sessionCorrect * POINTS_PER_QUESTION;
     const passed = score >= PASS_SCORE;
-    els.resultsTitle.textContent = passed ? "Exam passed" : "Exam not passed";
-    els.resultsText.textContent = passed
-      ? "You reached the minimum score required to pass."
-      : "You need at least 18 points. Review your mistakes and try another simulation.";
-    els.resultScore.textContent = `${score}/33 · ${sessionCorrect}/11 correct`;
+    els.resultsTitle.textContent = passed ? t().examPassed : t().examFailed;
+    els.resultsText.textContent = passed ? t().examPassedText : t().examFailedText;
+    els.resultScore.textContent = `${score}/33 - ${sessionCorrect}/11 ${t().correctShort}`;
     return;
   }
 
-  els.resultsTitle.textContent = "Session complete";
-  els.resultsText.textContent = "Progress saved in this browser.";
-  els.resultScore.textContent = `${sessionCorrect}/${session.length} correct`;
+  els.resultsTitle.textContent = t().sessionComplete;
+  els.resultsText.textContent = t().progressSaved;
+  els.resultScore.textContent = `${sessionCorrect}/${session.length} ${t().correctShort}`;
 }
 
 function updateExamStrip() {
@@ -197,7 +321,7 @@ function updateExamStrip() {
   const score = sessionCorrect * POINTS_PER_QUESTION;
   els.liveScore.textContent = `${score}/33`;
   els.liveCorrect.textContent = `${sessionCorrect}/11`;
-  els.liveStatus.textContent = score >= PASS_SCORE ? "Passing" : "In progress";
+  els.liveStatus.textContent = score >= PASS_SCORE ? t().passing : t().inProgress;
 }
 
 function recordAnswer(q, isCorrect) {
@@ -226,13 +350,60 @@ function updateStats() {
 
 function getWeakTopic() {
   const topics = Object.entries(progress.topics);
-  if (!topics.length) return "None";
+  if (!topics.length) return t().none;
   topics.sort((a, b) => {
     const aw = a[1].wrong / Math.max(a[1].seen, 1);
     const bw = b[1].wrong / Math.max(b[1].seen, 1);
     return bw - aw || b[1].wrong - a[1].wrong;
   });
-  return topics[0][1].wrong ? topics[0][0] : "None";
+  return topics[0][1].wrong ? topics[0][0] : t().none;
+}
+
+function applyLanguage() {
+  const copy = t();
+  document.documentElement.lang = copy.htmlLang;
+  els.appTitle.textContent = copy.appTitle;
+  els.resetProgress.title = copy.resetProgress;
+  els.resetProgress.setAttribute("aria-label", copy.resetProgress);
+  els.statsGrid.setAttribute("aria-label", copy.statsAria);
+  els.seenLabel.textContent = copy.seenLabel;
+  els.accuracyLabel.textContent = copy.accuracyLabel;
+  els.weakTopicLabel.textContent = copy.weakTopicLabel;
+  els.modeTabs.setAttribute("aria-label", copy.modeTabsAria);
+  els.newSession.textContent = copy.newSession;
+  els.examStrip.setAttribute("aria-label", copy.examScoreAria);
+  els.scoreLabel.textContent = copy.score;
+  els.correctLabel.textContent = copy.correct;
+  els.statusLabel.textContent = copy.status;
+  els.infoButton.title = copy.showExplanation;
+  els.infoButton.setAttribute("aria-label", copy.showExplanation);
+  els.restartAfterResults.textContent = copy.tryAgain;
+
+  document.querySelectorAll(".language-button").forEach((button) => {
+    button.classList.toggle("active", button.dataset.language === language);
+  });
+
+  document.querySelectorAll(".tab").forEach((tab) => {
+    tab.textContent = copy.modes[tab.dataset.mode].tab;
+  });
+
+  if (session.length) {
+    els.modeTitle.textContent = copy.modes[mode].title;
+    els.modeDescription.textContent = copy.modes[mode].description;
+    els.questionCounter.textContent = copy.questionCounter(currentIndex + 1, session.length);
+    els.nextQuestion.textContent = currentIndex === session.length - 1 ? copy.finish : copy.next;
+    if (selected !== null) {
+      const q = session[currentIndex];
+      els.feedback.textContent = selected === q.answer ? copy.correctFeedback : copy.wrongFeedback;
+    }
+  }
+
+  updateStats();
+  updateExamStrip();
+}
+
+function t() {
+  return UI_TEXT[language] || UI_TEXT.it;
 }
 
 function pickQuestions(pool, size) {
@@ -267,6 +438,15 @@ function loadProgress() {
   return { totalAnswered: 0, totalCorrect: 0, questions: {}, topics: {} };
 }
 
+function loadLanguage() {
+  const saved = localStorage.getItem(LANGUAGE_KEY);
+  return saved === "en" ? "en" : "it";
+}
+
+function saveLanguage() {
+  localStorage.setItem(LANGUAGE_KEY, language);
+}
+
 function saveProgress() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
 }
@@ -277,4 +457,5 @@ function escapeHtml(value) {
   return div.innerHTML;
 }
 
+applyLanguage();
 startSession();

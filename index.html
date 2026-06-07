@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Food Economics Exam Trainer</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">Food Economics</p>
+        <h1>Exam Trainer</h1>
+      </div>
+      <button class="icon-button" id="resetProgress" title="Reset saved progress" aria-label="Reset saved progress">
+        <span aria-hidden="true">R</span>
+      </button>
+    </header>
+
+    <main>
+      <section class="stats-grid" aria-label="Saved progress">
+        <div class="stat">
+          <span class="stat-label">Questions seen</span>
+          <strong id="seenCount">0</strong>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Accuracy</span>
+          <strong id="accuracyRate">0%</strong>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Weak topic</span>
+          <strong id="weakTopic">None</strong>
+        </div>
+      </section>
+
+      <nav class="mode-tabs" aria-label="Study modes">
+        <button class="tab active" data-mode="past">Past Questions</button>
+        <button class="tab" data-mode="mixed">Mixed Practice</button>
+        <button class="tab" data-mode="exam">Real Exam</button>
+        <button class="tab" data-mode="review">Mistakes</button>
+      </nav>
+
+      <section class="toolbar">
+        <div>
+          <h2 id="modeTitle">Past Exam Questions</h2>
+          <p id="modeDescription">Practice questions taken from previous written exams.</p>
+        </div>
+        <button class="primary-button" id="newSession">New session</button>
+      </section>
+
+      <section class="exam-strip hidden" id="examStrip" aria-label="Exam score">
+        <div>
+          <span>Score</span>
+          <strong id="liveScore">0/33</strong>
+        </div>
+        <div>
+          <span>Correct</span>
+          <strong id="liveCorrect">0/11</strong>
+        </div>
+        <div>
+          <span>Status</span>
+          <strong id="liveStatus">In progress</strong>
+        </div>
+      </section>
+
+      <section class="quiz-panel" id="quizPanel">
+        <div class="question-meta">
+          <span id="questionCounter">Question 1</span>
+          <span id="questionTopic">Basics</span>
+        </div>
+        <h3 id="questionText"></h3>
+        <div class="answers" id="answers"></div>
+        <div class="feedback hidden" id="feedback"></div>
+        <div class="quiz-actions">
+          <button class="ghost-button" id="infoButton" title="Show explanation" aria-label="Show explanation">i</button>
+          <button class="secondary-button" id="nextQuestion">Next</button>
+        </div>
+        <p class="explanation hidden" id="explanation"></p>
+      </section>
+
+      <section class="results-panel hidden" id="resultsPanel">
+        <h2 id="resultsTitle">Session complete</h2>
+        <p id="resultsText"></p>
+        <div class="result-score" id="resultScore"></div>
+        <button class="primary-button" id="restartAfterResults">Try again</button>
+      </section>
+    </main>
+
+    <script src="questions.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

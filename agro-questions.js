@@ -1,4 +1,4 @@
-const AGRO_QUESTIONS = [
+var AGRO_QUESTIONS = [
   {
     id: "agro-001",
     source: "agro",

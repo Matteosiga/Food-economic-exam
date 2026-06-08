@@ -12,7 +12,7 @@ const MODES = {
     pool: () => QUESTION_BANK.filter((q) => q.source === "past")
   },
   agro: {
-    size: 20,
+    size: EXAM_SIZE,
     pool: () => QUESTION_BANK.filter((q) => q.source === "agro")
   },
   mixed: {
@@ -53,7 +53,7 @@ const UI_TEXT = {
       agro: {
         tab: "Domande AGRO",
         title: "Domande AGRO",
-        description: "Allenati solo con le domande del file DOMANDE AGRO."
+        description: "Simulazione con 11 domande AGRO, 3 punti ciascuna, punteggio finale in /33."
       },
       mixed: {
         tab: "Allenamento misto",
@@ -114,7 +114,7 @@ const UI_TEXT = {
       agro: {
         tab: "Domande AGRO",
         title: "Domande AGRO",
-        description: "Allenati solo con le domande del file DOMANDE AGRO."
+        description: "Simulazione con 11 domande AGRO, 3 punti ciascuna, punteggio finale in /33."
       },
       mixed: {
         tab: "Mixed Practice",
@@ -246,7 +246,7 @@ function startSession() {
   els.modeDescription.textContent = t().modes[mode].description;
   els.quizPanel.classList.remove("hidden");
   els.resultsPanel.classList.add("hidden");
-  els.examStrip.classList.toggle("hidden", mode !== "exam");
+  els.examStrip.classList.toggle("hidden", !isScoredExamMode());
   renderQuestion();
   updateExamStrip();
   updateStats();
@@ -320,7 +320,7 @@ function finishSession() {
   els.quizPanel.classList.add("hidden");
   els.resultsPanel.classList.remove("hidden");
 
-  if (mode === "exam") {
+  if (isScoredExamMode()) {
     const score = sessionCorrect * POINTS_PER_QUESTION;
     const passed = score >= PASS_SCORE;
     els.resultsTitle.textContent = passed ? t().examPassed : t().examFailed;
@@ -335,11 +335,15 @@ function finishSession() {
 }
 
 function updateExamStrip() {
-  if (mode !== "exam") return;
+  if (!isScoredExamMode()) return;
   const score = sessionCorrect * POINTS_PER_QUESTION;
   els.liveScore.textContent = `${score}/33`;
   els.liveCorrect.textContent = `${sessionCorrect}/11`;
   els.liveStatus.textContent = score >= PASS_SCORE ? t().passing : t().inProgress;
+}
+
+function isScoredExamMode() {
+  return mode === "exam" || mode === "agro";
 }
 
 function recordAnswer(q, isCorrect) {

@@ -1,4 +1,4 @@
-const QUESTION_BANK = [
+var QUESTION_BANK = [
   {
     id: "past-001",
     source: "past",

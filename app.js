@@ -4,24 +4,31 @@ const EXAM_SIZE = 11;
 const POINTS_PER_QUESTION = 3;
 const PASS_SCORE = 18;
 
+const CORE_SOURCES = new Set(["past", "generated"]);
+
 const MODES = {
   past: {
     size: 15,
     pool: () => QUESTION_BANK.filter((q) => q.source === "past")
   },
+  agro: {
+    size: 20,
+    pool: () => QUESTION_BANK.filter((q) => q.source === "agro")
+  },
   mixed: {
     size: 20,
-    pool: () => QUESTION_BANK
+    pool: () => QUESTION_BANK.filter((q) => CORE_SOURCES.has(q.source))
   },
   exam: {
     size: EXAM_SIZE,
-    pool: () => QUESTION_BANK
+    pool: () => QUESTION_BANK.filter((q) => CORE_SOURCES.has(q.source))
   },
   review: {
     size: 15,
     pool: (progress) => {
-      const missed = QUESTION_BANK.filter((q) => progress.questions[q.id]?.wrong > 0);
-      return missed.length ? missed : QUESTION_BANK;
+      const coreQuestions = QUESTION_BANK.filter((q) => CORE_SOURCES.has(q.source));
+      const missed = coreQuestions.filter((q) => progress.questions[q.id]?.wrong > 0);
+      return missed.length ? missed : coreQuestions;
     }
   }
 };
@@ -42,6 +49,11 @@ const UI_TEXT = {
         tab: "Domande passate",
         title: "Domande degli esami passati",
         description: "Allenati con le domande già uscite negli scritti precedenti."
+      },
+      agro: {
+        tab: "Domande AGRO",
+        title: "Domande AGRO",
+        description: "Allenati solo con le domande del file DOMANDE AGRO."
       },
       mixed: {
         tab: "Allenamento misto",
@@ -98,6 +110,11 @@ const UI_TEXT = {
         tab: "Past Questions",
         title: "Past Exam Questions",
         description: "Practice questions taken from previous written exams."
+      },
+      agro: {
+        tab: "Domande AGRO",
+        title: "Domande AGRO",
+        description: "Allenati solo con le domande del file DOMANDE AGRO."
       },
       mixed: {
         tab: "Mixed Practice",
@@ -199,6 +216,7 @@ document.querySelectorAll(".tab").forEach((tab) => {
   tab.addEventListener("click", () => {
     mode = tab.dataset.mode;
     document.querySelectorAll(".tab").forEach((item) => item.classList.toggle("active", item === tab));
+    applyLanguage();
     startSession();
   });
 });
@@ -403,6 +421,7 @@ function applyLanguage() {
 }
 
 function t() {
+  if (mode === "agro") return UI_TEXT.it;
   return UI_TEXT[language] || UI_TEXT.it;
 }
 
